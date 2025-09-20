@@ -38,7 +38,7 @@ struct ExperimentConfig {
 }
 
 // MARK: - Participant Profile
-struct ParticipantProfile: Identifiable, Codable, Equatable {
+struct ParticipantProfile: Identifiable, Codable, Equatable, Hashable {
     let id: UUID
     var name: String
     var createdAt: Date
@@ -47,6 +47,11 @@ struct ParticipantProfile: Identifiable, Codable, Equatable {
         self.id = id
         self.name = name
         self.createdAt = Date()
+    }
+    
+    // Hashable conformance
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

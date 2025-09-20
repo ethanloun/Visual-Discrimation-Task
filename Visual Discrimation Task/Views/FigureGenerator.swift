@@ -14,8 +14,12 @@ struct FigureGenerator {
             switch type {
             case .simple:
                 SimpleFigure()
+            case .medium:
+                MediumFigure()
             case .complex:
                 ComplexFigure()
+            case .veryComplex:
+                VeryComplexFigure()
             }
         }
         .rotationEffect(.degrees(rotationAngle))
@@ -111,6 +115,180 @@ struct ComplexFigure: View {
     }
 }
 
+// MARK: - Medium Figure
+struct MediumFigure: View {
+    var body: some View {
+        ZStack {
+            // Medium complexity geometric shape
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.green)
+                .frame(width: 90, height: 70)
+            
+            // Medium internal pattern
+            VStack(spacing: 5) {
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 18, height: 18)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 25, height: 12)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 18, height: 18)
+                }
+                
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(width: 35, height: 6)
+                
+                HStack(spacing: 3) {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 10)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 15, height: 8)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 10)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Very Complex Figure
+struct VeryComplexFigure: View {
+    var body: some View {
+        ZStack {
+            // Very complex geometric shape
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color.red)
+                .frame(width: 110, height: 90)
+            
+            // Very complex internal pattern
+            VStack(spacing: 4) {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 12, height: 12)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 18, height: 12)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 12, height: 12)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 18, height: 12)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 12, height: 12)
+                }
+                
+                HStack(spacing: 3) {
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 6)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 8)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 6)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 8)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 6)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 8)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 6)
+                }
+                
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 10)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 15, height: 8)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 10)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 15, height: 8)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 10, height: 10)
+                }
+                
+                HStack(spacing: 2) {
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 4)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 6, height: 6)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 4)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 6, height: 6)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 4)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 6, height: 6)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 4)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 6, height: 6)
+                    
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: 8, height: 4)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Figure Preview
 struct FigurePreview: View {
     let figureType: FigureType
@@ -130,7 +308,7 @@ struct FigurePreview: View {
             .font(.title2)
             .fontWeight(.bold)
         
-        HStack(spacing: 30) {
+        HStack(spacing: 20) {
             VStack {
                 Text("Simple")
                     .font(.caption)
@@ -138,9 +316,21 @@ struct FigurePreview: View {
             }
             
             VStack {
+                Text("Medium")
+                    .font(.caption)
+                FigurePreview(figureType: .medium, rotationAngle: 0)
+            }
+            
+            VStack {
                 Text("Complex")
                     .font(.caption)
                 FigurePreview(figureType: .complex, rotationAngle: 0)
+            }
+            
+            VStack {
+                Text("Very Complex")
+                    .font(.caption)
+                FigurePreview(figureType: .veryComplex, rotationAngle: 0)
             }
         }
         

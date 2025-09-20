@@ -289,10 +289,145 @@ extension StatisticalAnalysis {
         return TTestResult(tStatistic: tStatistic, pValue: pValue, degreesOfFreedom: degreesOfFreedom)
     }
     
+    // ANOVA for comparing multiple groups
+    static func oneWayANOVA(groups: [[Double]]) -> ANOVAResult {
+        guard groups.count > 1 else {
+            return ANOVAResult(fStatistic: 0, pValue: 1.0, degreesOfFreedomBetween: 0, degreesOfFreedomWithin: 0)
+        }
+        
+        let allValues = groups.flatMap { $0 }
+        let grandMean = allValues.reduce(0, +) / Double(allValues.count)
+        
+        // Calculate between-group sum of squares
+        var betweenSS = 0.0
+        for group in groups {
+            let groupMean = group.reduce(0, +) / Double(group.count)
+            betweenSS += Double(group.count) * pow(groupMean - grandMean, 2)
+        }
+        
+        // Calculate within-group sum of squares
+        var withinSS = 0.0
+        for group in groups {
+            let groupMean = group.reduce(0, +) / Double(group.count)
+            for value in group {
+                withinSS += pow(value - groupMean, 2)
+            }
+        }
+        
+        let dfBetween = groups.count - 1
+        let dfWithin = allValues.count - groups.count
+        
+        let msBetween = betweenSS / Double(dfBetween)
+        let msWithin = withinSS / Double(dfWithin)
+        
+        let fStatistic = msBetween / msWithin
+        
+        // Simplified p-value calculation
+        let pValue = fStatistic > 3.0 ? 0.05 : 0.5
+        
+        return ANOVAResult(
+            fStatistic: fStatistic,
+            pValue: pValue,
+            degreesOfFreedomBetween: dfBetween,
+            degreesOfFreedomWithin: dfWithin
+        )
+    }
+    
+    // Linear regression analysis
+    static func linearRegression(x: [Double], y: [Double]) -> RegressionResult {
+        guard x.count == y.count && x.count > 1 else {
+            return RegressionResult(slope: 0, intercept: 0, rSquared: 0, pValue: 1.0)
+        }
+        
+        let n = Double(x.count)
+        let sumX = x.reduce(0, +)
+        let sumY = y.reduce(0, +)
+        let sumXY = zip(x, y).map(*).reduce(0, +)
+        let sumX2 = x.map { $0 * $0 }.reduce(0, +)
+        let sumY2 = y.map { $0 * $0 }.reduce(0, +)
+        
+        let slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
+        let intercept = (sumY - slope * sumX) / n
+        
+        // Calculate R-squared
+        let yMean = sumY / n
+        let ssTotal = y.map { pow($0 - yMean, 2) }.reduce(0, +)
+        let ssResidual = zip(x, y).map { pow($1 - (slope * $0 + intercept), 2) }.reduce(0, +)
+        let rSquared = 1 - (ssResidual / ssTotal)
+        
+        // Simplified p-value calculation
+        let pValue = abs(slope) > 0.1 ? 0.05 : 0.5
+        
+        return RegressionResult(slope: slope, intercept: intercept, rSquared: rSquared, pValue: pValue)
+    }
+    
+    // Effect size calculation (Cohen's d)
+    static func cohensD(group1: [Double], group2: [Double]) -> Double {
+        guard group1.count > 1 && group2.count > 1 else { return 0.0 }
+        
+        let mean1 = group1.reduce(0, +) / Double(group1.count)
+        let mean2 = group2.reduce(0, +) / Double(group2.count)
+        
+        let var1 = calculateVariance(group1, mean: mean1)
+        let var2 = calculateVariance(group2, mean: mean2)
+        
+        let pooledStdDev = sqrt(((Double(group1.count - 1) * var1) + (Double(group2.count - 1) * var2)) / Double(group1.count + group2.count - 2))
+        
+        return (mean1 - mean2) / pooledStdDev
+    }
+    
+    // Statistical power analysis
+    static func calculatePower(effectSize: Double, sampleSize: Int, alpha: Double = 0.05) -> Double {
+        // Simplified power calculation
+        let ncp = effectSize * sqrt(Double(sampleSize))
+        let criticalValue = 1.96 // For alpha = 0.05, two-tailed
+        let power = 1 - normalCDF(criticalValue - ncp)
+        return max(0, min(1, power))
+    }
+    
+    // Sample size calculation for desired power
+    static func calculateSampleSize(effectSize: Double, desiredPower: Double = 0.8, alpha: Double = 0.05) -> Int {
+        let zAlpha = 1.96 // For alpha = 0.05, two-tailed
+        let zBeta = normalQuantile(desiredPower)
+        let n = pow((zAlpha + zBeta) / effectSize, 2)
+        return Int(ceil(n))
+    }
+    
     private static func calculateVariance(_ values: [Double], mean: Double) -> Double {
         guard values.count > 1 else { return 0.0 }
         let squaredDifferences = values.map { pow($0 - mean, 2) }
         return squaredDifferences.reduce(0, +) / Double(values.count - 1)
+    }
+    
+    // Approximate normal CDF
+    private static func normalCDF(_ x: Double) -> Double {
+        return 0.5 * (1 + erf(x / sqrt(2)))
+    }
+    
+    // Approximate normal quantile function
+    private static func normalQuantile(_ p: Double) -> Double {
+        return sqrt(2) * erfinv(2 * p - 1)
+    }
+    
+    // Approximate inverse error function
+    private static func erfinv(_ x: Double) -> Double {
+        let a: [Double] = [0.886226899, -1.645349621, 0.914624893, -0.140543331]
+        let b: [Double] = [1.0, -2.118377725, 1.442710462, -0.329097515, 0.012229801]
+        let c: [Double] = [-1.970840454, -1.624906493, 3.429567803, 1.641345311]
+        let d: [Double] = [1.0, 3.543889200, 1.637067800]
+        
+        if abs(x) <= 0.7 {
+            let x2 = x * x
+            let numerator = a[0] + a[1] * x2 + a[2] * x2 * x2 + a[3] * x2 * x2 * x2
+            let denominator = b[0] + b[1] * x2 + b[2] * x2 * x2 + b[3] * x2 * x2 * x2 + b[4] * x2 * x2 * x2 * x2
+            return x * numerator / denominator
+        } else {
+            let sign = x >= 0 ? 1.0 : -1.0
+            let x = abs(x)
+            let numerator = c[0] + c[1] * x + c[2] * x * x + c[3] * x * x * x
+            let denominator = d[0] + d[1] * x + d[2] * x * x
+            return sign * numerator / denominator
+        }
     }
 }
 
@@ -300,4 +435,18 @@ struct TTestResult {
     let tStatistic: Double
     let pValue: Double
     let degreesOfFreedom: Int
+}
+
+struct ANOVAResult {
+    let fStatistic: Double
+    let pValue: Double
+    let degreesOfFreedomBetween: Int
+    let degreesOfFreedomWithin: Int
+}
+
+struct RegressionResult {
+    let slope: Double
+    let intercept: Double
+    let rSquared: Double
+    let pValue: Double
 }

@@ -18,6 +18,9 @@ struct ConfigurationView: View {
     @State private var breakInterval: Int
     @State private var selectedFigureTypes: Set<FigureType>
     @State private var rotationAngles: [Double]
+    @State private var practiceTrials: Int
+    @State private var enablePracticeMode: Bool
+    @State private var adaptiveDifficulty: Bool
     
     init(session: ExperimentSession) {
         self.session = session
@@ -28,6 +31,9 @@ struct ConfigurationView: View {
         self._breakInterval = State(initialValue: session.config.breakInterval)
         self._selectedFigureTypes = State(initialValue: Set(session.config.figureTypes))
         self._rotationAngles = State(initialValue: session.config.rotationAngles)
+        self._practiceTrials = State(initialValue: session.config.practiceTrials)
+        self._enablePracticeMode = State(initialValue: session.config.enablePracticeMode)
+        self._adaptiveDifficulty = State(initialValue: session.config.adaptiveDifficulty)
     }
     
     var body: some View {
@@ -48,6 +54,21 @@ struct ConfigurationView: View {
                     }
                     
                     VStack(alignment: .leading) {
+                        Toggle("Enable Practice Mode", isOn: $enablePracticeMode)
+                        
+                        if enablePracticeMode {
+                            VStack(alignment: .leading) {
+                                Text("Practice Trials: \(practiceTrials)")
+                                Slider(value: Binding(
+                                    get: { Double(practiceTrials) },
+                                    set: { practiceTrials = Int($0) }
+                                ), in: 5...20, step: 1)
+                            }
+                            .padding(.leading, 20)
+                        }
+                    }
+                    
+                    VStack(alignment: .leading) {
                         Text("Presentation Duration: \(String(format: "%.1f", presentationDuration))s")
                         Slider(value: $presentationDuration, in: 0.5...5.0, step: 0.1)
                     }
@@ -64,6 +85,9 @@ struct ConfigurationView: View {
                             set: { breakInterval = Int($0) }
                         ), in: 10...50, step: 5)
                     }
+                    
+                    Toggle("Adaptive Difficulty", isOn: $adaptiveDifficulty)
+                        .help("Automatically adjust difficulty based on performance")
                 }
                 
                 Section("Figure Types") {
@@ -140,7 +164,8 @@ struct ConfigurationView: View {
     
     private var estimatedDuration: Int {
         let trialsPerMinute = 60.0 / (presentationDuration + responseTimeout)
-        return Int(ceil(Double(totalTrials) / trialsPerMinute))
+        let totalTrialCount = totalTrials + (enablePracticeMode ? practiceTrials : 0)
+        return Int(ceil(Double(totalTrialCount) / trialsPerMinute))
     }
     
     private var trialsPerCondition: Int {
@@ -152,11 +177,14 @@ struct ConfigurationView: View {
             participantID: participantID,
             sessionID: UUID().uuidString,
             totalTrials: totalTrials,
+            practiceTrials: practiceTrials,
             rotationAngles: rotationAngles,
             figureTypes: Array(selectedFigureTypes),
             presentationDuration: presentationDuration,
             responseTimeout: responseTimeout,
-            breakInterval: breakInterval
+            breakInterval: breakInterval,
+            enablePracticeMode: enablePracticeMode,
+            adaptiveDifficulty: adaptiveDifficulty
         )
         
         session.config = newConfig
